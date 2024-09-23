@@ -2,6 +2,11 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import random
+import csv
+from ibm_watson import NaturalLanguageUnderstandingV1
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson.natural_language_understanding_v1 \
+    import Features, EntitiesOptions
 
 def scrape_ltt_forum(url, pages=1):
     all_threads = []
@@ -18,7 +23,7 @@ def scrape_ltt_forum(url, pages=1):
     
     session = requests.Session()
     
-    for page in range(1, pages + 1):
+    for page in range(1, pages + 1): #For each page, get the page URL, access it and get threads.
         page_url = f"{url}?page={page}"
         try:
             response = session.get(page_url, headers=headers, timeout=10)
@@ -31,21 +36,11 @@ def scrape_ltt_forum(url, pages=1):
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # Check if we're getting the expected content
-        if "LINUS TECH TIPS" in soup.text:
-            print("Received protective page. Attempting to bypass...")
-            # Here you would implement logic to bypass the protection
-            # This could involve solving a CAPTCHA, waiting, or using a different approach
-            continue
-        
         threads = soup.select('li.ipsDataItem')
         
-        print(f"Found {len(threads)} thread elements on page {page}")
-        
         for thread in threads:
-            title_elem = thread.select_one('a')
-            #print(title_elem)
-            author_elem = thread.select_one('.ipsDataItem_meta a')
+            title_elem = thread.select_one('a') #Title
+            author_elem = thread.select_one('.ipsDataItem_meta a') #Author tag
             date_elem = thread.select_one('time')
             
             if title_elem and author_elem and date_elem:
@@ -56,28 +51,98 @@ def scrape_ltt_forum(url, pages=1):
                     'date': date_elem['datetime']
                 }
                 all_threads.append(thread_data)
-            else:
-                print("Missing elements in thread:")
-                print(f"  Title element found: {title_elem is not None}")
-                print(f"  Author element found: {author_elem is not None}")
-                print(f"  Date element found: {date_elem is not None}")
+                
+                
+            #---------
+            #Checks
+            # else:
+            #     print("Missing elements in thread:")
+            #     print(f"  Title element found: {title_elem is not None}")
+            #     print(f"  Author element found: {author_elem is not None}")
+            #     print(f"  Date element found: {date_elem is not None}")
+            #print(f"Scraped {len(all_threads)} threads from page {page}")
+            #---------
         
-        print(f"Scraped {len(all_threads)} threads from page {page}")
         time.sleep(random.uniform(2, 5))  # Random delay between requests
     
     return all_threads
 
+import csv
+import json
+import os
+from ibm_watson import NaturalLanguageUnderstandingV1
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson.natural_language_understanding_v1 import Features, EntitiesOptions
+
 def main():
     url = "https://linustechtips.com/forum/13-tech-news/"
-    threads = scrape_ltt_forum(url, pages=3)  # Scrape 3 pages
+    
+    # User input for number of pages to scrape
+    while True:
+        try:
+            pages = int(input("Enter the number of pages to scrape: "))
+            if pages > 0:
+                break
+            else:
+                print("Please enter a positive integer.")
+        except ValueError:
+            print("Invalid input. Please enter a positive integer.")
+    
+    # User input for output directory
+    output_dir = input("Enter the output directory path (leave blank for current directory): ").strip()
+    if not output_dir:
+        output_dir = '.'
+    
+    # Create the output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
+    threads = scrape_ltt_forum(url, pages=pages)
+    
+    # Save scraped data as CSV
+    scraped_file = os.path.join(output_dir, 'scraped_threads.csv')
+    with open(scraped_file, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=['title', 'url', 'author', 'date'])
+        writer.writeheader()
+        writer.writerows(threads)
     
     print(f"\nTotal threads scraped: {len(threads)}")
-    for thread in threads:
-        print(f"\nTitle: {thread['title']}")
-        print(f"URL: {thread['url']}")
-        print(f"Author: {thread['author']}")
-        print(f"Date: {thread['date']}")
-        print('----------------------------------')
+    print(f"Scraped data saved to {scraped_file}")
+
+    # Set up IBM Watson NLU
+    authenticator = IAMAuthenticator('UVPe694_HOJgsU4Gq0mWhTgXppC9i1LsMXUfaJu_tWLY')
+    natural_language_understanding = NaturalLanguageUnderstandingV1(
+        version='2022-04-07',
+        authenticator=authenticator
+    )
+    natural_language_understanding.set_service_url('https://api.us-east.natural-language-understanding.watson.cloud.ibm.com/instances/c33e95c2-226e-4c7d-90ad-422e73786ba0')
+
+    # Analyze titles for entities and save results as CSV
+    entity_file = os.path.join(output_dir, 'entity_analysis.csv')
+    with open(entity_file, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Title', 'URL', 'Entity', 'Type', 'Confidence', 'Sentiment Score'])
+
+        for thread in threads:
+            try:
+                response = natural_language_understanding.analyze(
+                    text=thread['title'],
+                    features=Features(entities=EntitiesOptions(sentiment=True, limit=5))
+                ).get_result()
+                
+                for entity in response['entities']:
+                    writer.writerow([
+                        thread['title'],
+                        thread['url'],
+                        entity['text'],
+                        entity['type'],
+                        entity.get('confidence', 'N/A'),
+                        entity['sentiment']['score']
+                    ])
+            except Exception as e:
+                print(f"Error analyzing title: {thread['title']}")
+                print(f"Error message: {str(e)}")
+
+    print(f"Entity analysis completed and saved to {entity_file}")
 
 if __name__ == "__main__":
     main()
