@@ -51,19 +51,8 @@ def scrape_ltt_forum(url, pages=1):
                     'date': date_elem['datetime']
                 }
                 all_threads.append(thread_data)
-                
-                
-            #---------
-            #Checks
-            # else:
-            #     print("Missing elements in thread:")
-            #     print(f"  Title element found: {title_elem is not None}")
-            #     print(f"  Author element found: {author_elem is not None}")
-            #     print(f"  Date element found: {date_elem is not None}")
-            #print(f"Scraped {len(all_threads)} threads from page {page}")
-            #---------
         
-        time.sleep(random.uniform(2, 5))  # Random delay between requests
+        time.sleep(random.uniform(2, 5))  # Random delay between requests. Please do not change it.
     
     return all_threads
 
