@@ -66,7 +66,7 @@ def scrape_ltt_forum(url, pages=1):
     
     return all_threads
 
-def clean_data(threads):
+def clean_data(threads): # Function for cleaning data
     clean_threads = []
     for thread in threads:
         # Clean title, url, author. Whitespaces (unnecesary ones) removed with regex and strip.
