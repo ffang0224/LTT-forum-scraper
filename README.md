@@ -67,6 +67,8 @@ Check the `test-data` folder to check sample output (last updated: September 22 
 
 *Note: Please do not remove the scraping cooldown out of respect to LTT forums.*
 
+![media](./media/image.png)
+
 ## Limitations
 
 - The script may be affected by changes to the LTT forum's HTML structure.
