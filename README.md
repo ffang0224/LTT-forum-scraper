@@ -4,7 +4,7 @@
 
 This Python script scrapes the Linus Tech Tips (LTT) forum for information of the tech news and performs entity analysis on the thread titles using IBM Watson's Natural Language Understanding service. The results are saved in CSV format for easy analysis.
 
-## Benefits
+## Value
 
 As a technology forum, the news posted in the thread are highly valuable for analyzing the current state of tech companies, including fields such as gaming, crypto and social media. By obtaining the principal entities that figure on the popular news of the forum, it is possible to quickly isolate the companies and actors that might be of interest to people invested in the world of technology. This script provides variable data such as confidence, type and sentiment of the entity observed for customizable analysis of the data provided.
 
