@@ -44,7 +44,7 @@ authenticator = IAMAuthenticator('YOUR_API_KEY')
 natural_language_understanding.set_service_url('YOUR_SERVICE_URL')
 ```
 
-## Usage
+## Input
 
 1. Run the script:
 
@@ -68,6 +68,11 @@ Check the `test-data` folder to check sample output (last updated: September 22 
 *Note: Please do not remove the scraping cooldown out of respect to LTT forums.*
 
 ![media](./media/image.png)
+
+## Data format details
+
+- The date is formatted in `YYYY-MM-DD HH:MM:SS` format.
+- All unnecesssary whitespaces are removed.
 
 ## Limitations
 

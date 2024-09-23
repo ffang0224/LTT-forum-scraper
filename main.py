@@ -3,22 +3,30 @@ from bs4 import BeautifulSoup
 import time
 import random
 import csv
+
+#IBM modules
 from ibm_watson import NaturalLanguageUnderstandingV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson.natural_language_understanding_v1 \
     import Features, EntitiesOptions
+    
+#os for dotenv
 import os
 from dotenv import load_dotenv
+
+#clean data modules
+import re
+from datetime import datetime
 
 def scrape_ltt_forum(url, pages=1):
     all_threads = []
     
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', # Just in case it is not always HTML. 
+        'Accept-Language': 'en-US,en;q=0.5', #English US or any type of english
         'Referer': 'https://linustechtips.com/',
-        'DNT': '1',
+        'DNT': '1', # Do not track usage.
         'Connection': 'keep-alive',
         'Upgrade-Insecure-Requests': '1',
     }
@@ -58,6 +66,30 @@ def scrape_ltt_forum(url, pages=1):
     
     return all_threads
 
+def clean_data(threads):
+    clean_threads = []
+    for thread in threads:
+        # Clean title, url, author. Whitespaces (unnecesary ones) removed with regex and strip.
+        clean_title = re.sub(r'\s+', ' ', thread['title']).strip()
+        clean_url = thread['url'].strip()
+        clean_author = re.sub(r'\s+', ' ', thread['author']).strip()
+        
+        # Clean and standardize date
+        try:
+            date_obj = datetime.fromisoformat(thread['date'].replace('Z', '+00:00'))
+            clean_date = date_obj.strftime('%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            clean_date = thread['date']  # Keep original if parsing fails
+        
+        clean_threads.append({
+            'title': clean_title,
+            'url': clean_url,
+            'author': clean_author,
+            'date': clean_date
+        })
+    
+    return clean_threads
+
 def main():
     url = "https://linustechtips.com/forum/13-tech-news/"
     
@@ -82,14 +114,16 @@ def main():
     
     threads = scrape_ltt_forum(url, pages=pages)
     
+    cleaned_threads = clean_data(threads)
+    
     # Save scraped data as CSV
     scraped_file = os.path.join(output_dir, 'scraped_threads.csv')
     with open(scraped_file, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=['title', 'url', 'author', 'date'])
         writer.writeheader()
-        writer.writerows(threads)
+        writer.writerows(cleaned_threads)
     
-    print(f"\nTotal threads scraped: {len(threads)}")
+    print(f"\nTotal threads scraped: {len(cleaned_threads)}")
     print(f"Scraped data saved to {scraped_file}")
 
     # Set up IBM Watson NLU
@@ -120,7 +154,7 @@ def main():
                         thread['url'],
                         entity['text'],
                         entity['type'],
-                        entity.get('confidence', 'N/A'),
+                        entity.get('confidence', 'N/A'), #Checking for no confidence.
                         entity['sentiment']['score']
                     ])
             except Exception as e:
