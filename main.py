@@ -7,6 +7,8 @@ from ibm_watson import NaturalLanguageUnderstandingV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson.natural_language_understanding_v1 \
     import Features, EntitiesOptions
+import os
+from dotenv import load_dotenv
 
 def scrape_ltt_forum(url, pages=1):
     all_threads = []
@@ -56,13 +58,6 @@ def scrape_ltt_forum(url, pages=1):
     
     return all_threads
 
-import csv
-import json
-import os
-from ibm_watson import NaturalLanguageUnderstandingV1
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_watson.natural_language_understanding_v1 import Features, EntitiesOptions
-
 def main():
     url = "https://linustechtips.com/forum/13-tech-news/"
     
@@ -98,12 +93,13 @@ def main():
     print(f"Scraped data saved to {scraped_file}")
 
     # Set up IBM Watson NLU
-    authenticator = IAMAuthenticator({APIKEY})
+    load_dotenv()
+    authenticator = IAMAuthenticator(os.getenv('API_KEY'))
     natural_language_understanding = NaturalLanguageUnderstandingV1(
         version='2022-04-07',
         authenticator=authenticator
     )
-    natural_language_understanding.set_service_url({URL})
+    natural_language_understanding.set_service_url(os.getenv('SERVICE_URL'))
 
     # Analyze titles for entities and save results as CSV
     entity_file = os.path.join(output_dir, 'entity_analysis.csv')
