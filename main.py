@@ -103,7 +103,7 @@ def main():
         version='2022-04-07',
         authenticator=authenticator
     )
-    natural_language_understanding.set_service_url({SERVICE URL})
+    natural_language_understanding.set_service_url({URL})
 
     # Analyze titles for entities and save results as CSV
     entity_file = os.path.join(output_dir, 'entity_analysis.csv')
