@@ -98,12 +98,12 @@ def main():
     print(f"Scraped data saved to {scraped_file}")
 
     # Set up IBM Watson NLU
-    authenticator = IAMAuthenticator('UVPe694_HOJgsU4Gq0mWhTgXppC9i1LsMXUfaJu_tWLY')
+    authenticator = IAMAuthenticator({APIKEY})
     natural_language_understanding = NaturalLanguageUnderstandingV1(
         version='2022-04-07',
         authenticator=authenticator
     )
-    natural_language_understanding.set_service_url('https://api.us-east.natural-language-understanding.watson.cloud.ibm.com/instances/c33e95c2-226e-4c7d-90ad-422e73786ba0')
+    natural_language_understanding.set_service_url({SERVICE URL})
 
     # Analyze titles for entities and save results as CSV
     entity_file = os.path.join(output_dir, 'entity_analysis.csv')
