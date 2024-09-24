@@ -8,6 +8,10 @@ This Python script scrapes the Linus Tech Tips (LTT) forum for information of th
 
 As a technology forum, the news posted in the thread are highly valuable for analyzing the current state of tech companies, including fields such as gaming, crypto and social media. By obtaining the principal entities that figure on the popular news of the forum, it is possible to quickly isolate the companies and actors that might be of interest to people invested in the world of technology. This script provides variable data such as confidence, type and sentiment of the entity observed for customizable analysis of the data provided.
 
+Possible applications of this data include, for example, a word cloud or a table showing the most common entities mentioned. For investment purposes, the organizations, people or products mentioned more often will be frequent agents that are featuring in the **popular** news recently, thus showing that they are entities worth researching due to possible changes in their value.
+
+*This is just an hypothetical example of the possible uses of the output.*
+
 ## Features
 
 - Scrapes thread information from the LTT Tech News forum
